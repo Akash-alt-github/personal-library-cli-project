@@ -19,18 +19,28 @@ class LibraryManagerTests(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def test_add_list_and_search_books(self) -> None:
-        book = self.library.add_book("The Hobbit", "J. R. R. Tolkien", "Fantasy", 310)
+        first_book = self.library.add_book(
+            "The Hobbit",
+            "J. R. R. Tolkien",
+            "Fantasy",
+            310,
+        )
         self.library.add_book("Dune", "Frank Herbert", "Science Fiction", 412)
 
         self.assertEqual(
-            [item.title for item in self.library.list_books()], ["The Hobbit", "Dune"]
+            [book.title for book in self.library.list_books()],
+            ["The Hobbit", "Dune"],
         )
-        self.assertEqual(self.library.list_books(genre="fantasy"), [book])
-        self.assertEqual(self.library.search("TOLKIEN"), [book])
+        self.assertEqual(self.library.list_books(genre="fantasy"), [first_book])
+        self.assertEqual(self.library.search("TOLKIEN"), [first_book])
 
     def test_progress_and_finished_status(self) -> None:
         book = self.library.add_book(
-            "The Hobbit", "J. R. R. Tolkien", "Fantasy", 310, "reading"
+            "The Hobbit",
+            "J. R. R. Tolkien",
+            "Fantasy",
+            310,
+            "reading",
         )
 
         self.library.update_progress(book.id, 120)
@@ -60,3 +70,4 @@ class LibraryManagerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

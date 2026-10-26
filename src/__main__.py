@@ -2,9 +2,9 @@
 
 import argparse
 
+from .app.errors import BookNotFound, InvalidData
 from .app.manager import LibraryManager
 from .app.models import Book
-from .app.errors import BookNotFound, InvalidData
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -14,27 +14,33 @@ def build_parser() -> argparse.ArgumentParser:
     )
     commands = parser.add_subparsers(dest="command", required=True)
 
-    add_parser = commands.add_parser("add", help="Add a book")
+    valid_statuses = ("to-read", "reading", "finished")
+
+    add_parser = commands.add_parser("add", help="Add a new book")
     add_parser.add_argument("--title", required=True, help="Book title")
-    add_parser.add_argument(
-        "--author", required=True, nargs="+", help="Book author"
-    )
+    add_parser.add_argument("--author", required=True, nargs="+", help="Book author")
     add_parser.add_argument("--genre", required=True, help="Book genre")
     add_parser.add_argument("--pages", required=True, type=int, help="Total page count")
     add_parser.add_argument(
-        "--status", choices=("to-read", "reading", "finished"), default="to-read"
+        "--status",
+        choices=valid_statuses,
+        default="to-read",
+        help="Reading status for the new book",
     )
 
     list_parser = commands.add_parser("list", help="List books")
-    list_parser.add_argument("--status", choices=("to-read", "reading", "finished"))
+    list_parser.add_argument("--status", choices=valid_statuses, help="Filter by status")
     list_parser.add_argument("--genre", help="Filter by genre")
 
     status_parser = commands.add_parser(
-        "status", help="Change a book's reading status"
+        "status",
+        help="Change a book's reading status",
     )
     status_parser.add_argument("book_id", help="Book ID shown by the list command")
     status_parser.add_argument(
-        "status", choices=("to-read", "reading", "finished"), help="New status"
+        "status",
+        choices=valid_statuses,
+        help="New status to set",
     )
 
     progress_parser = commands.add_parser("progress", help="Update reading progress")
@@ -55,29 +61,36 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _print_books(books: list[Book]) -> None:
-    """Print matching books, including IDs for later update or removal."""
+    """Print matching books with IDs for later updates or removal."""
     if not books:
         print("No books found.")
         return
+
     for book in books:
-        book_details = (
+        details = (
             f"{book.id} | {book.title} by {book.author} | {book.genre} | "
             f"{book.current_page}/{book.pages} pages | {book.status}"
         )
         if book.finished_date:
-            book_details += f" | finished {book.finished_date}"
-        print(book_details)
+            details += f" | finished {book.finished_date}"
+        print(details)
 
 
 def main(argv: list[str] | None = None) -> int:
     """Run one library command and return an appropriate process status."""
     parser = build_parser()
     args = parser.parse_args(argv)
+
     try:
         library = LibraryManager()
+
         if args.command == "add":
             book = library.add_book(
-                args.title, " ".join(args.author), args.genre, args.pages, args.status
+                args.title,
+                " ".join(args.author),
+                args.genre,
+                args.pages,
+                args.status,
             )
             print(f"Added '{book.title}' (ID: {book.id}).")
         elif args.command == "list":
@@ -105,8 +118,9 @@ def main(argv: list[str] | None = None) -> int:
     except (BookNotFound, InvalidData, ValueError) as error:
         print(f"Error: {error}")
         return 1
+
     return 0
 
-    
-if __name__ == '__main__':
-    raise SystemExit(main())
+
+if __name__ == "__main__":
+    main()
