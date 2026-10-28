@@ -41,29 +41,26 @@ class LibraryManager:
         self, status: str | None = None, genre: str | None = None
     ) -> list[Book]:
         """Return books matching optional status and genre filters."""
-        matching_books: list[Book] = []
-
-        for book in self.books:
-            if status is not None and book.status != status:
-                continue
-            if genre is not None and book.genre.casefold() != genre.casefold():
-                continue
-            matching_books.append(book)
-
-        return matching_books
+        normalized_genre = genre.casefold() if genre is not None else None
+        return [
+            book
+            for book in self.books
+            if (status is None or book.status == status)
+            and (
+                normalized_genre is None
+                or book.genre.casefold() == normalized_genre
+            )
+        ]
 
     def search(self, query: str) -> list[Book]:
         """Find books whose title or author partially matches a query."""
         normalized_query = query.casefold()
-        matching_books: list[Book] = []
-
-        for book in self.books:
-            title_matches = normalized_query in book.title.casefold()
-            author_matches = normalized_query in book.author.casefold()
-            if title_matches or author_matches:
-                matching_books.append(book)
-
-        return matching_books
+        return [
+            book
+            for book in self.books
+            if normalized_query in book.title.casefold()
+            or normalized_query in book.author.casefold()
+        ]
 
     def update_progress(self, book_id: str, current_page: int) -> Book:
         """Update progress for a book currently marked as reading."""
@@ -110,24 +107,18 @@ class LibraryManager:
 
     def statistics(self) -> dict[str, int | float | str | None]:
         """Calculate collection totals and reading statistics."""
-        finished_books: list[Book] = []
-        finished_this_year = 0
-        total_pages_read = 0
+        finished_books = [book for book in self.books if book.status == "finished"]
         genre_counts: dict[str, int] = {}
 
-        for book in self.books:
-            if book.status != "finished":
-                continue
-
-            finished_books.append(book)
-            total_pages_read += book.pages
-
-            if book.finished_date:
-                finish_year = date.fromisoformat(book.finished_date).year
-                if finish_year == date.today().year:
-                    finished_this_year += 1
-
+        for book in finished_books:
             genre_counts[book.genre] = genre_counts.get(book.genre, 0) + 1
+
+        finished_this_year = sum(
+            1
+            for book in finished_books
+            if book.finished_date
+            and date.fromisoformat(book.finished_date).year == date.today().year
+        )
 
         favorite_genre = None
         largest_genre_count = 0
@@ -136,9 +127,10 @@ class LibraryManager:
                 favorite_genre = genre
                 largest_genre_count = count
 
-        average_pages_read = 0.0
-        if finished_books:
-            average_pages_read = total_pages_read / len(finished_books)
+        total_pages_read = sum(book.pages for book in finished_books)
+        average_pages_read = (
+            total_pages_read / len(finished_books) if finished_books else 0.0
+        )
 
         return {
             "total_books": len(self.books),
@@ -157,5 +149,3 @@ class LibraryManager:
     def _save(self) -> None:
         """Persist the current collection."""
         self.storage.save(self.books)
-
-

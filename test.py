@@ -1,11 +1,13 @@
 """Basic tests for the personal library application."""
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from src.app.errors import BookNotFound
 from src.app.manager import LibraryManager
+from src.app.models import Book
 from src.app.storage import JsonStorage
 
 
@@ -51,6 +53,64 @@ class LibraryManagerTests(unittest.TestCase):
         self.assertEqual(book.current_page, book.pages)
         self.assertIsNotNone(book.finished_date)
 
+    def test_statistics_include_finished_books_only(self) -> None:
+        self.library.add_book("First", "Author", "Fantasy", 100, "finished")
+        self.library.add_book("Second", "Author", "Fantasy", 300, "finished")
+        self.library.add_book("Current", "Author", "Mystery", 200, "reading")
+
+        self.assertEqual(
+            self.library.statistics(),
+            {
+                "total_books": 3,
+                "finished_this_year": 2,
+                "average_pages_read": 200.0,
+                "favorite_genre": "Fantasy",
+            },
+        )
+
+    def test_legacy_status_is_normalized_when_loading_a_book(self) -> None:
+        book = Book.from_dict(
+            {
+                "id": "legacy-book",
+                "title": "Old Record",
+                "author": "Author",
+                "genre": "History",
+                "pages": 120,
+                "status": "read",
+            }
+        )
+
+        self.assertEqual(book.status, "finished")
+        self.assertEqual(book.current_page, 120)
+
+    def test_duplicate_book_ids_are_made_unique_when_loaded(self) -> None:
+        storage = self.library.storage
+        storage.path.write_text(
+            json.dumps(
+                [
+                    {
+                        "id": "duplicate",
+                        "title": "First",
+                        "author": "Author",
+                        "genre": "Fantasy",
+                        "pages": 100,
+                    },
+                    {
+                        "id": "duplicate",
+                        "title": "Second",
+                        "author": "Author",
+                        "genre": "Fantasy",
+                        "pages": 100,
+                    },
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        books = storage.load()
+
+        self.assertEqual([book.id for book in books], ["duplicate", "duplicate-2"])
+
     def test_books_persist_and_can_be_removed(self) -> None:
         book = self.library.add_book("Dune", "Frank Herbert", "Science Fiction", 412)
         storage = self.library.storage
@@ -70,4 +130,3 @@ class LibraryManagerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

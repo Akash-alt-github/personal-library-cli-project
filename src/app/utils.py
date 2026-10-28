@@ -5,5 +5,5 @@ import uuid
 
 def generate_id() -> str:
     """Return a compact, unique identifier for a book."""
-    identifier_parts = str(uuid.uuid4()).split("-")
-    return f"{identifier_parts[0]}-{identifier_parts[-1]}"
+    identifier = uuid.uuid4().hex
+    return f"{identifier[:8]}-{identifier[-12:]}"

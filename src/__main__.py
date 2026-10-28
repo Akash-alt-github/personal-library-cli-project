@@ -84,37 +84,41 @@ def main(argv: list[str] | None = None) -> int:
     try:
         library = LibraryManager()
 
-        if args.command == "add":
-            book = library.add_book(
-                args.title,
-                " ".join(args.author),
-                args.genre,
-                args.pages,
-                args.status,
-            )
-            print(f"Added '{book.title}' (ID: {book.id}).")
-        elif args.command == "list":
-            _print_books(library.list_books(args.status, args.genre))
-        elif args.command == "status":
-            book = library.update_status(args.book_id, args.status)
-            print(f"Changed '{book.title}' to {book.status}.")
-        elif args.command == "progress":
-            book = library.update_progress(args.book_id, args.current_page)
-            print(f"Updated '{book.title}' to page {book.current_page}.")
-        elif args.command == "finish":
-            book = library.mark_finished(args.book_id)
-            print(f"Finished '{book.title}' on {book.finished_date}.")
-        elif args.command == "remove":
-            book = library.remove_book(args.book_id)
-            print(f"Removed '{book.title}'.")
-        elif args.command == "search":
-            _print_books(library.search(args.query))
-        elif args.command == "stats":
-            stats = library.statistics()
-            print(f"Total books: {stats['total_books']}")
-            print(f"Finished this year: {stats['finished_this_year']}")
-            print(f"Average pages per finished book: {stats['average_pages_read']:.1f}")
-            print(f"Favorite genre: {stats['favorite_genre'] or 'N/A'}")
+        match args.command:
+            case "add":
+                book = library.add_book(
+                    args.title,
+                    " ".join(args.author),
+                    args.genre,
+                    args.pages,
+                    args.status,
+                )
+                print(f"Added '{book.title}' (ID: {book.id}).")
+            case "list":
+                _print_books(library.list_books(args.status, args.genre))
+            case "status":
+                book = library.update_status(args.book_id, args.status)
+                print(f"Changed '{book.title}' to {book.status}.")
+            case "progress":
+                book = library.update_progress(args.book_id, args.current_page)
+                print(f"Updated '{book.title}' to page {book.current_page}.")
+            case "finish":
+                book = library.mark_finished(args.book_id)
+                print(f"Finished '{book.title}' on {book.finished_date}.")
+            case "remove":
+                book = library.remove_book(args.book_id)
+                print(f"Removed '{book.title}'.")
+            case "search":
+                _print_books(library.search(args.query))
+            case "stats":
+                stats = library.statistics()
+                print(f"Total books: {stats['total_books']}")
+                print(f"Finished this year: {stats['finished_this_year']}")
+                print(
+                    "Average pages per finished book: "
+                    f"{stats['average_pages_read']:.1f}"
+                )
+                print(f"Favorite genre: {stats['favorite_genre'] or 'N/A'}")
     except (BookNotFound, InvalidData, ValueError) as error:
         print(f"Error: {error}")
         return 1

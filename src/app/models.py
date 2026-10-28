@@ -50,11 +50,8 @@ class Book:
     def _normalize_status(status: str) -> str:
         """Normalize older status names to the current status values."""
         normalized_status = status.strip().lower()
-        if normalized_status == "unread":
-            return "to-read"
-        if normalized_status == "read":
-            return "finished"
-        return normalized_status
+        legacy_statuses = {"unread": "to-read", "read": "finished"}
+        return legacy_statuses.get(normalized_status, normalized_status)
 
     def _validate_fields(self) -> None:
         """Check that the book data is valid before saving."""
@@ -83,26 +80,17 @@ class Book:
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> "Book":
         """Create a book from a saved JSON record."""
-        title = data["title"]
-        author = data["author"]
-        genre = data["genre"]
-        pages = int(data.get("pages", data.get("total_pages", 0)))
-        status = str(data.get("status", "to-read"))
-        current_page = int(data.get("current_page", 0))
-        finished_date = (
-            str(data["finished_date"])
-            if data.get("finished_date") is not None
-            else None
-        )
-        book_id = str(data["id"]) if data.get("id") else None
-
         return cls(
-            title=str(title),
-            author=str(author),
-            genre=str(genre),
-            pages=pages,
-            status=status,
-            current_page=current_page,
-            finished_date=finished_date,
-            book_id=book_id,
+            title=str(data["title"]),
+            author=str(data["author"]),
+            genre=str(data["genre"]),
+            pages=int(data.get("pages", data.get("total_pages", 0))),
+            status=str(data.get("status", "to-read")),
+            current_page=int(data.get("current_page", 0)),
+            finished_date=(
+                str(data["finished_date"])
+                if data.get("finished_date") is not None
+                else None
+            ),
+            book_id=str(data["id"]) if data.get("id") else None,
         )

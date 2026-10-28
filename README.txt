@@ -18,6 +18,19 @@ Python:
 
     python -m src --help
 
+Project structure
+-----------------
+
+    src/__main__.py       CLI arguments and command output
+    src/app/manager.py    Library operations and statistics
+    src/app/models.py     Book data, validation, and legacy status handling
+    src/app/storage.py    JSON loading and saving
+    src/app/errors.py     Application-specific exceptions
+    src/app/utils.py      Shared utility functions
+    src/config.py         Data-file location
+    data/books.json       Saved book collection
+
+
 Commands
 --------
 
@@ -28,7 +41,7 @@ Add a book (status is optional: to-read, reading, or finished):
 List books, optionally filtering by status or genre:
 
     python -m src list
-    python -m src list --status reading --genre Fantasy
+    python -m src list --status reading
 
 Change a book's status:
 
@@ -48,7 +61,7 @@ Remove a book:
 
 Search book titles and authors:
 
-    python -m src search "hobbit"
+    python -m src search "hobbit" or python -m src search "J."
 
 Show collection statistics:
 

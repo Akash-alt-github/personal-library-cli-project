@@ -33,7 +33,7 @@ class JsonStorage:
             raise InvalidData("The book data file must contain a JSON list.")
 
         books: list[Book] = []
-        used_ids: list[str] = []
+        used_ids: set[str] = set()
 
         for record in raw_records:
             try:
@@ -48,7 +48,7 @@ class JsonStorage:
                     suffix += 1
                 book.id = f"{original_id}-{suffix}"
 
-            used_ids.append(book.id)
+            used_ids.add(book.id)
             books.append(book)
 
         return books
